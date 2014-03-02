@@ -56,7 +56,7 @@ type DFSIterator struct {
 }
 
 func NewDFSIterator(start *Node) *DFSIterator {
-    it := &DFSIterator{start, make(NodeSet, 0), make(NodeSet, 0), make(chan *Node)}
+    it := &DFSIterator{start, NodeSet(nil), NodeSet(nil), make(chan *Node)}
     it.current = append(it.current, start)
     return it
 }

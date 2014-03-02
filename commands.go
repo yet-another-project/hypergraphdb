@@ -251,11 +251,11 @@ type CommonAncestorCommand struct {
 func (cmd *CommonAncestorCommand) execute(params []string) bool {
     it1 := NewUpwardParentIterator(cmd.dir.allNodes[params[0]])
     it2 := NewUpwardParentIterator(cmd.dir.allNodes[params[1]])
-    nodes1 := make(NodeSet, 0)
+    nodes1 := NodeSet(nil)
     for node := range it1.Stream() {
         nodes1 = append(nodes1, node)
     }
-    nodes2 := make(NodeSet, 0)
+    nodes2 := NodeSet(nil)
     for node := range it2.Stream() {
         nodes2 = append(nodes2, node)
     }

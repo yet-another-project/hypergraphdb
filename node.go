@@ -13,7 +13,7 @@ type Node struct {
 type NodeSet []*Node
 
 func NewGraph(label string) *Node {
-    return &Node{label, nil, make(NodeSet, 0), make(NodeSet, 0)}
+    return &Node{label, nil, NodeSet(nil), NodeSet(nil)}
 }
 
 func (parent *Node) NewNode(label string) *Node {
