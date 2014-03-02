@@ -16,11 +16,11 @@ func NewChildrenIterator(start *Node) *ChildrenIterator {
     return &ChildrenIterator{start}
 }
 
-func (self *ChildrenIterator) Stream() <-chan *Node {
+func (it *ChildrenIterator) Stream() <-chan *Node {
     ch := make(chan *Node)
     go func() {
-        for child := range self.start.subnodes {
-            ch <- self.start.subnodes[child]
+        for child := range it.start.subnodes {
+            ch <- it.start.subnodes[child]
         }
         close(ch)
     }()
@@ -31,9 +31,9 @@ type UpwardParentIterator struct {
     start *Node
 }
 
-func (self *UpwardParentIterator) Stream() <-chan *Node {
+func (it *UpwardParentIterator) Stream() <-chan *Node {
     ch := make(chan *Node)
-    currentNode := self.start.parent
+    currentNode := it.start.parent
     go func() {
         for currentNode != nil {
             ch <- currentNode
@@ -61,52 +61,52 @@ func NewDFSIterator(start *Node) *DFSIterator {
     return it
 }
 
-func (self *DFSIterator) dfsUtil(pre bool) {
-    stackTop := self.current[len(self.current)-1]
+func (it *DFSIterator) dfsUtil(pre bool) {
+    stackTop := it.current[len(it.current)-1]
     glog.V(1).Infoln("started ctx " + stackTop.String())
-    if !self.isVisited(stackTop) && pre {
+    if !it.isVisited(stackTop) && pre {
         glog.V(2).Infoln("pushing at start of scope " + stackTop.String())
-        self.pushNode(stackTop)
-        status := self.popNode(stackTop)
+        it.pushNode(stackTop)
+        status := it.popNode(stackTop)
         if !status {
             glog.V(2).Infoln("could not pop node")
         }
     }
     for _, neighbour := range stackTop.neighbours {
-            if !self.isVisited(neighbour) && !self.isOnBackPath(neighbour) {
-                self.current = append(self.current, neighbour)
-                self.visited = append(self.visited, neighbour)
+            if !it.isVisited(neighbour) && !it.isOnBackPath(neighbour) {
+                it.current = append(it.current, neighbour)
+                it.visited = append(it.visited, neighbour)
                 if pre {
                     glog.V(2).Infoln("before recursive, pushing " + neighbour.String() + " from ctx " + stackTop.String())
-                    self.pushNode(neighbour)
+                    it.pushNode(neighbour)
                 }
-                self.dfsUtil(pre)
+                it.dfsUtil(pre)
                 if !pre {
                     glog.V(2).Infoln("back from recursive, pushing " + neighbour.String() + " from ctx " + stackTop.String())
-                    self.pushNode(neighbour)
+                    it.pushNode(neighbour)
                 }
             }
     }
-    if !self.isVisited(stackTop) && !pre {
+    if !it.isVisited(stackTop) && !pre {
         glog.V(2).Infoln("pushing before end of scope " + stackTop.String())
-        self.pushNode(stackTop)
-        status := self.popNode(stackTop)
+        it.pushNode(stackTop)
+        status := it.popNode(stackTop)
         if !status {
             glog.V(2).Infoln("could not pop node")
         }
     }
 }
 
-func (self *DFSIterator) Stream() <-chan *Node {
+func (it *DFSIterator) Stream() <-chan *Node {
     go func() {
-        self.dfsUtil(false)
-        close(self.stream)
+        it.dfsUtil(false)
+        close(it.stream)
     }()
-    return self.stream
+    return it.stream
 }
 
-func (self *DFSIterator) isVisited(node *Node) bool {
-    for _, visited := range self.visited {
+func (it *DFSIterator) isVisited(node *Node) bool {
+    for _, visited := range it.visited {
         if visited == node {
             return true
         }
@@ -114,8 +114,8 @@ func (self *DFSIterator) isVisited(node *Node) bool {
     return false
 }
 
-func (self *DFSIterator) isOnBackPath(node *Node) bool {
-    for _, prev := range self.current {
+func (it *DFSIterator) isOnBackPath(node *Node) bool {
+    for _, prev := range it.current {
         if prev == node {
             return true
         }
@@ -123,17 +123,17 @@ func (self *DFSIterator) isOnBackPath(node *Node) bool {
     return false
 }
 
-func (self *DFSIterator) pushNode(node *Node) bool {
+func (it *DFSIterator) pushNode(node *Node) bool {
     glog.V(1).Infoln("pushing node", node)
-    self.stream<- node
-    self.visited = append(self.visited, node)
+    it.stream<- node
+    it.visited = append(it.visited, node)
     return true
 }
 
-func (self *DFSIterator) popNode(node *Node) bool {
-    head, tail := self.visited[len(self.visited)-1], self.visited[:len(self.visited)-1]
+func (it *DFSIterator) popNode(node *Node) bool {
+    head, tail := it.visited[len(it.visited)-1], it.visited[:len(it.visited)-1]
     if head == node {
-        self.visited = tail
+        it.visited = tail
         return true
     }
     return false
