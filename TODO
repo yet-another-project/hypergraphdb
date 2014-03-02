@@ -1,0 +1,4 @@
+* testing
+* race detection
+* further iterators (perhaps the "hyper" one, which would allow combining with a regular iterator like DFS)
+* benchmark and refactor problem areas (most probably iterators)
