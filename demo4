@@ -1,0 +1,8 @@
+g a
+new b
+new c
+new d
+connect a - b
+connect b - c
+connect c - d
+connect d - a

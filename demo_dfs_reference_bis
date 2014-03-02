@@ -1,0 +1,12 @@
+g 1
+new 2
+new 3
+new 4
+new 5
+connect 2 - 1
+connect 3 - 1
+connect 3 - 2
+connect 4 - 2
+connect 5 - 2
+connect 5 - 3
+connect 5 - 4

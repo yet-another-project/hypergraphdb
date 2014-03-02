@@ -1,0 +1,6 @@
+g a
+new b
+new c
+new d
+reparent d c
+reparent c b
