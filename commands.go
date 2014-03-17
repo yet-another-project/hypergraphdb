@@ -21,10 +21,6 @@ func NewCommandsDirector() *commandsDirector {
 
     dir.RegisterCommand(&HelpCommand{"help", dir})
     dir.RegisterCommand(&AllCommand{"all", dir})
-    dir.RegisterCommand(&ChildrenCommand{"children", dir})
-    dir.RegisterCommand(&ParentsCommand{"parents", dir})
-    dir.RegisterCommand(&CommonAncestorCommand{"common-ancestor", dir})//the nearest (bottom-up) ancestor, operates on Node.parent, which in turn is tied to Node.subnodes (hyperedges)
-    dir.RegisterCommand(&DFSCommand{"dfs", dir})
 
     dir.RegisterCommand(&GraphCommand{"g", dir})
     dir.RegisterCommand(&NewCommand{"new", dir})
@@ -170,7 +166,7 @@ type NewCommand struct {
 }
 func (cmd *NewCommand) execute(params []string) bool {
     cmd.dir.storeCommand = true
-    node := cmd.dir.rootNode.NewNode(params[0])
+    node := cmd.dir.rootNode.NewSubGraph(params[0])
     cmd.dir.allNodes[params[0]] = node
     return true
 }
@@ -192,124 +188,6 @@ func (cmd *NewCommand) validateParams(params []string) bool {
     return false
 }
 
-type ChildrenCommand struct {
-    name string
-    dir *commandsDirector
-}
-func (cmd *ChildrenCommand) execute(params []string) bool {
-    for child := range NewChildrenIterator(cmd.dir.allNodes[params[0]]).Stream() {
-        fmt.Println(child)
-    }
-    return false
-}
-func (cmd *ChildrenCommand) getName() string {
-    return cmd.name
-}
-func (cmd *ChildrenCommand) getHelp() string {
-    str := "<name>\n\tprint children of node <name>"
-    return str
-}
-func (cmd *ChildrenCommand) validateParams(params []string) bool {
-    if len(params) == 1 {
-        if _, ok := cmd.dir.allNodes[params[0]]; ok {
-            return true
-        }
-    }
-    return false
-}
-
-type ParentsCommand struct {
-    name string
-    dir *commandsDirector
-}
-func (cmd *ParentsCommand) execute(params []string) bool {
-    for parent := range NewUpwardParentIterator(cmd.dir.allNodes[params[0]]).Stream() {
-        fmt.Println(parent)
-    }
-    return true
-}
-func (cmd *ParentsCommand) getName() string {
-    return cmd.name
-}
-func (cmd *ParentsCommand) getHelp() string {
-    str := "<name>\n\tshow parents in the tree, starting at node <name>"
-    return str
-}
-func (cmd *ParentsCommand) validateParams(params []string) bool {
-    if len(params) == 1 {
-        if _, ok := cmd.dir.allNodes[params[0]]; true {
-            return ok
-        }
-    }
-    return false
-}
-
-type CommonAncestorCommand struct {
-    name string
-    dir *commandsDirector
-}
-func (cmd *CommonAncestorCommand) execute(params []string) bool {
-    it1 := NewUpwardParentIterator(cmd.dir.allNodes[params[0]])
-    it2 := NewUpwardParentIterator(cmd.dir.allNodes[params[1]])
-    nodes1 := NodeSet(nil)
-    for node := range it1.Stream() {
-        nodes1 = append(nodes1, node)
-    }
-    nodes2 := NodeSet(nil)
-    for node := range it2.Stream() {
-        nodes2 = append(nodes2, node)
-    }
-    if len(nodes1) > len(nodes2) {
-        nodes2, nodes1 = nodes1, nodes2
-    }
-
-    var common *Node
-outerLoop:
-    for _, node2 := range nodes2 {
-        for _, node1 := range nodes1 {
-            if node1 == node2 {
-                common = node1
-                break outerLoop
-            }
-        }
-    }
-
-    fmt.Println(common)
-    return true
-}
-func (cmd *CommonAncestorCommand) getName() string {
-    return cmd.name
-}
-func (cmd *CommonAncestorCommand) getHelp() string {
-    str := "<name1> <name2>\n\tfind the common ancestor of <name1> and <name2>"
-    return str
-}
-func (cmd *CommonAncestorCommand) validateParams(params []string) bool {
-    if len(params) == 2 {
-        missing := ""
-        if _, ok := cmd.dir.allNodes[params[0]]; !ok {
-            missing = "first"
-        }
-        if _, ok := cmd.dir.allNodes[params[1]]; !ok {
-            if len(missing) != 0 {
-                missing += " and second"
-            } else {
-                missing = "second"
-            }
-        }
-        if len(missing) > 6 {
-            fmt.Println(missing + " parameters missing")
-            return false
-        } else if len(missing) > 0 {
-            fmt.Println(missing + " parameter missing")
-            return false
-        } else {
-            return true
-        }
-    }
-    fmt.Println("invalid number of parameters")
-    return false
-}
 
 type ReparentCommand struct {
     name string

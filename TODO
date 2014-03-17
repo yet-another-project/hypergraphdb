@@ -1,4 +1,12 @@
+* DFS iterator and a common interface for iterators as a Node method
+* the other iterators: BFS and iterative deepening
+* the hyper part
+* rendering engine for hypergraphs
+
+* self-modifieble graph
+* graph which keeps its own history
 * testing
 * race detection
 * further iterators (perhaps the "hyper" one, which would allow combining with a regular iterator like DFS)
+* documentation
 * benchmark and refactor problem areas (most probably iterators)

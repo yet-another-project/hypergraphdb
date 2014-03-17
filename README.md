@@ -25,3 +25,8 @@ helpful to also adjust your PATH:
 Then run the console:
 
     graphdb
+
+To recompile:
+
+    go install github.com/yet-another-project/hypergraphdb/cmd/graphdb
+

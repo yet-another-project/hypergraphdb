@@ -4,64 +4,24 @@ import (
     "github.com/golang/glog"
 )
 
-type Iterator interface {
+type Iterator2 interface {
     Stream() <-chan *Node
 }
 
-type ChildrenIterator struct {
-    start *Node
-}
-
-func NewChildrenIterator(start *Node) *ChildrenIterator {
-    return &ChildrenIterator{start}
-}
-
-func (it *ChildrenIterator) Stream() <-chan *Node {
-    ch := make(chan *Node)
-    go func() {
-        for child := range it.start.subnodes {
-            ch <- it.start.subnodes[child]
-        }
-        close(ch)
-    }()
-    return ch
-}
-
-type UpwardParentIterator struct {
-    start *Node
-}
-
-func (it *UpwardParentIterator) Stream() <-chan *Node {
-    ch := make(chan *Node)
-    currentNode := it.start.parent
-    go func() {
-        for currentNode != nil {
-            ch <- currentNode
-            currentNode = currentNode.parent
-        }
-        close(ch)
-    }()
-    return ch
-}
-
-func NewUpwardParentIterator(start *Node) *UpwardParentIterator {
-    return &UpwardParentIterator{start}
-}
-
-type DFSIterator struct {
+type DFSIterator2 struct {
     start *Node
     current NodeSet
     visited NodeSet
     stream chan *Node
 }
 
-func NewDFSIterator(start *Node) *DFSIterator {
-    it := &DFSIterator{start, NodeSet(nil), NodeSet(nil), make(chan *Node)}
+func NewDFSIterator(start *Node) *DFSIterator2 {
+    it := &DFSIterator2{start, NodeSet(nil), NodeSet(nil), make(chan *Node)}
     it.current = append(it.current, start)
     return it
 }
 
-func (it *DFSIterator) dfsUtil(pre bool) {
+func (it *DFSIterator2) dfsUtil(pre bool) {
     stackTop := it.current[len(it.current)-1]
     glog.V(1).Infoln("started ctx " + stackTop.String())
     if !it.isVisited(stackTop) && pre {
@@ -97,7 +57,7 @@ func (it *DFSIterator) dfsUtil(pre bool) {
     }
 }
 
-func (it *DFSIterator) Stream() <-chan *Node {
+func (it *DFSIterator2) Stream() <-chan *Node {
     go func() {
         it.dfsUtil(false)
         close(it.stream)
@@ -105,7 +65,7 @@ func (it *DFSIterator) Stream() <-chan *Node {
     return it.stream
 }
 
-func (it *DFSIterator) isVisited(node *Node) bool {
+func (it *DFSIterator2) isVisited(node *Node) bool {
     for _, visited := range it.visited {
         if visited == node {
             return true
@@ -114,7 +74,7 @@ func (it *DFSIterator) isVisited(node *Node) bool {
     return false
 }
 
-func (it *DFSIterator) isOnBackPath(node *Node) bool {
+func (it *DFSIterator2) isOnBackPath(node *Node) bool {
     for _, prev := range it.current {
         if prev == node {
             return true
@@ -123,14 +83,14 @@ func (it *DFSIterator) isOnBackPath(node *Node) bool {
     return false
 }
 
-func (it *DFSIterator) pushNode(node *Node) bool {
+func (it *DFSIterator2) pushNode(node *Node) bool {
     glog.V(1).Infoln("pushing node", node)
     it.stream<- node
     it.visited = append(it.visited, node)
     return true
 }
 
-func (it *DFSIterator) popNode(node *Node) bool {
+func (it *DFSIterator2) popNode(node *Node) bool {
     head, tail := it.visited[len(it.visited)-1], it.visited[:len(it.visited)-1]
     if head == node {
         it.visited = tail
