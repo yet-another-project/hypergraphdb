@@ -1,5 +1,5 @@
 /*
-Package graphdb provides an embeddable hypergraph database.
+Package hypergraphdb provides an embeddable hypergraph database.
 
 Basics
 
@@ -10,7 +10,7 @@ Features
 Here be features.
 */
 
-package graphdb
+package hypergraphdb
 /*
 Grammar:
 
