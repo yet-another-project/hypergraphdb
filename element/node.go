@@ -1,7 +1,6 @@
-package graphdb
-import (
-    "github.com/golang/glog"
-)
+package element
+
+import "github.com/golang/glog"
 
 type Node struct {
     label string
@@ -11,9 +10,6 @@ type Node struct {
     hypertrail NodeSet //the nodes this node goes through as a hyperedge
 }
 
-type NodeSet []*Node
-
-//------------------- creation
 func NewGraph(label string) *Node {
     return &Node{label, nil, NodeSet(nil), NodeSet(nil), NodeSet(nil)}
 }
@@ -98,6 +94,14 @@ outerLoop:
 }
 
 //------------------- information
+func (node *Node) Subnodes() NodeSet {
+    return node.subnodes
+}
+
+func (node *Node) Neighbours() NodeSet {
+    return node.neighbours
+}
+
 func (parent *Node) String() string {
     str := parent.label
     if len(parent.neighbours) > 0 {

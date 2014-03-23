@@ -1,27 +1,23 @@
-package graphdb
-
+package iterator
 import (
+    "github.com/yet-another-project/hypergraphdb/element"
     "github.com/golang/glog"
 )
 
-type Iterator2 interface {
-    Stream() <-chan *Node
+type RecursiveDFS struct {
+    start *element.Node
+    current element.NodeSet
+    visited element.NodeSet
+    stream chan *element.Node
 }
 
-type DFSIterator2 struct {
-    start *Node
-    current NodeSet
-    visited NodeSet
-    stream chan *Node
-}
-
-func NewDFSIterator(start *Node) *DFSIterator2 {
-    it := &DFSIterator2{start, NodeSet(nil), NodeSet(nil), make(chan *Node)}
+func NewRecursiveDFS(start *element.Node) *RecursiveDFS {
+    it := &RecursiveDFS{start, element.NodeSet(nil), element.NodeSet(nil), make(chan *element.Node)}
     it.current = append(it.current, start)
     return it
 }
 
-func (it *DFSIterator2) dfsUtil(pre bool) {
+func (it *RecursiveDFS) dfsUtil(pre bool) {
     stackTop := it.current[len(it.current)-1]
     glog.V(1).Infoln("started ctx " + stackTop.String())
     if !it.isVisited(stackTop) && pre {
@@ -32,7 +28,7 @@ func (it *DFSIterator2) dfsUtil(pre bool) {
             glog.V(2).Infoln("could not pop node")
         }
     }
-    for _, neighbour := range stackTop.neighbours {
+    for _, neighbour := range stackTop.Neighbours() {
             if !it.isVisited(neighbour) && !it.isOnBackPath(neighbour) {
                 it.current = append(it.current, neighbour)
                 it.visited = append(it.visited, neighbour)
@@ -57,7 +53,7 @@ func (it *DFSIterator2) dfsUtil(pre bool) {
     }
 }
 
-func (it *DFSIterator2) Stream() <-chan *Node {
+func (it *RecursiveDFS) Stream() <-chan *element.Node {
     go func() {
         it.dfsUtil(false)
         close(it.stream)
@@ -65,7 +61,7 @@ func (it *DFSIterator2) Stream() <-chan *Node {
     return it.stream
 }
 
-func (it *DFSIterator2) isVisited(node *Node) bool {
+func (it *RecursiveDFS) isVisited(node *element.Node) bool {
     for _, visited := range it.visited {
         if visited == node {
             return true
@@ -74,7 +70,7 @@ func (it *DFSIterator2) isVisited(node *Node) bool {
     return false
 }
 
-func (it *DFSIterator2) isOnBackPath(node *Node) bool {
+func (it *RecursiveDFS) isOnBackPath(node *element.Node) bool {
     for _, prev := range it.current {
         if prev == node {
             return true
@@ -83,14 +79,14 @@ func (it *DFSIterator2) isOnBackPath(node *Node) bool {
     return false
 }
 
-func (it *DFSIterator2) pushNode(node *Node) bool {
+func (it *RecursiveDFS) pushNode(node *element.Node) bool {
     glog.V(1).Infoln("pushing node", node)
     it.stream<- node
     it.visited = append(it.visited, node)
     return true
 }
 
-func (it *DFSIterator2) popNode(node *Node) bool {
+func (it *RecursiveDFS) popNode(node *element.Node) bool {
     head, tail := it.visited[len(it.visited)-1], it.visited[:len(it.visited)-1]
     if head == node {
         it.visited = tail
@@ -98,3 +94,4 @@ func (it *DFSIterator2) popNode(node *Node) bool {
     }
     return false
 }
+

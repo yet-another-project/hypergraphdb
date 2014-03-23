@@ -1,7 +1,6 @@
-package graphdb
-import (
-    //"github.com/golang/glog"
-)
+package element
+
+type NodeSet []*Node
 
 func (nodes *NodeSet) String() string {
     str := "["
