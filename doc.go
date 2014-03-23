@@ -9,7 +9,6 @@ Features
 
 Here be features.
 */
-
 package hypergraphdb
 /*
 Grammar:
