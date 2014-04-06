@@ -78,7 +78,7 @@ func (it *LinearDFS) Next() *element.Node {
         //glog.V(vlevel).Infoln("popped", popped, "top", topNode)
         return it.returnNode(popped)
     }
-    if !it.visited.ContainsNode(nextNeighbour) {
+    if _, ok := it.visited.ContainsNode(nextNeighbour); !ok {
         it.contextStack.PushNode(nextNeighbour)
         //glog.V(vlevel).Infoln("pushed, new stack", it.contextStack.String(), "\n-")
         return it.returnNode(it.Next())

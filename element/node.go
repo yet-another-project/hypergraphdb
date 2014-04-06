@@ -8,14 +8,31 @@ type Node struct {
     subnodes NodeSet //nested subgraphs
     neighbours NodeSet //connected nodes (regular nodes, regular edges)
     hypertrail NodeSet //the nodes this node goes through as a hyperedge
+    hyperneighbours NodeSet //the hypertrails that go through this node
+
+    ShowNeighbours bool
+    ShowHypertrail bool
+    ShowSubnodes bool
+    ShowHyperNeighbours bool
 }
 
+type NodeType int //TODO: infer this
+
+const (
+    Hypergraph NodeType = iota //no parent
+    Leaf //no subnodes, neighbours or hypertrails
+    GraphNode //no subnodes and hypertrails
+)
+
 func NewGraph(label string) *Node {
-    return &Node{label, nil, NodeSet(nil), NodeSet(nil), NodeSet(nil)}
+    return &Node{label, nil, NodeSet(nil), NodeSet(nil), NodeSet(nil), NodeSet(nil), true, true, true, true}
 }
 
 func (parent *Node) NewSubGraph(label string) *Node {
     newNode := NewGraph(label)
+    newNode.ShowNeighbours = parent.ShowNeighbours
+    newNode.ShowHypertrail = parent.ShowHypertrail
+    newNode.ShowSubnodes = parent.ShowSubnodes
     newNode.parent = parent
     parent.subnodes = append(parent.subnodes, newNode)
     return newNode
@@ -61,6 +78,16 @@ func (node *Node) ConnectMutualNeighbour(other *Node) bool {
     return true
 }
 
+func (node *Node) ConnectNewHyperedge(label string, set NodeSet) *Node {
+    parent := set.CommonAncestor()
+    hyperedge := parent.NewSubGraph(label)
+    hyperedge.hypertrail = set
+    for _, hypernode := range set {
+        hypernode.hyperneighbours = append(hypernode.hyperneighbours, hyperedge)
+    }
+    return hyperedge
+}
+
 //------------------- exploration
 func (node *Node) UpwardParents() NodeSet {
     parents := NodeSet(nil)
@@ -104,41 +131,30 @@ func (node *Node) Neighbours() NodeSet {
 
 func (parent *Node) String() string {
     str := parent.label
-    if len(parent.neighbours) > 0 {
-        str += "{"
-        for i := range parent.neighbours {
-            str += parent.neighbours[i].label
-            if i != len(parent.neighbours)-1 {
+
+    display := func(set NodeSet, start string, end string) string {
+        str := start
+        for i := range set {
+            str += set[i].label
+            if i != len(set)-1 {
                 str += ", "
             }
         }
-        str += "}"
+        str += end
+        return str
     }
-    if len(parent.hypertrail) > 0 {
-        if len(parent.neighbours) > 0 {
-            str += "  "
-        }
-        str += "<"
-        for i := range parent.hypertrail {
-            str += parent.hypertrail[i].label
-            if i != len(parent.hypertrail)-1 {
-                str += ", "
-            }
-        }
-        str += ">"
+
+    if len(parent.neighbours) > 0 && parent.ShowNeighbours {
+        str += " " + display(parent.neighbours, "(", ")")
     }
-    if len(parent.subnodes) > 0 {
-        if len(parent.hypertrail) > 0 {
-            str += "  "
-        }
-        str += "["
-        for i := range parent.subnodes {
-            str += parent.subnodes[i].label
-            if i != len(parent.subnodes)-1 {
-                str += ", "
-            }
-        }
-        str += "]"
+    if len(parent.subnodes) > 0 && parent.ShowSubnodes {
+        str += " " + display(parent.subnodes, "[", "]")
+    }
+    if len(parent.hypertrail) > 0 && parent.ShowHypertrail {
+        str += " " + display(parent.hypertrail, "<", ">")
+    }
+    if len(parent.hyperneighbours) > 0 && parent.ShowHyperNeighbours {
+        str += " " + display(parent.hyperneighbours, "{", "}")
     }
     return str
 }

@@ -1,21 +1,24 @@
 package element
 
+import (
+)
+
 type NodeSet []*Node
 
-func (nodes *NodeSet) String() string {
+func (set NodeSet) String() string {
     str := "["
-    for i := range *nodes {
-        str += (*nodes)[i].String()
-        if i != len(*nodes)-1 {
+    for i := range set {
+        str += (set)[i].String()
+        if i != len(set)-1 {
             str += ", "
         }
     }
     return str + "]"
 }
 
-func (nodes NodeSet) Intersect(nodes2 NodeSet) NodeSet {
+func (set NodeSet) Intersect(nodes2 NodeSet) NodeSet {
     counted := make(map[*Node]bool)
-    for _, node := range nodes {
+    for _, node := range set {
         counted[node] = true
     }
     common := NodeSet(nil)
@@ -27,37 +30,37 @@ func (nodes NodeSet) Intersect(nodes2 NodeSet) NodeSet {
     return common
 }
 
-func (nodes NodeSet) Union(nodes2 NodeSet) NodeSet {
+func (set NodeSet) Union(nodes2 NodeSet) NodeSet {
     return nil
 }
 
-func (nodes NodeSet) Difference(nodes2 NodeSet) NodeSet {
+func (set NodeSet) Difference(nodes2 NodeSet) NodeSet {
     return nil
 }
 
-func (nodes NodeSet) Xor(nodes2 NodeSet) NodeSet {
+func (set NodeSet) Xor(nodes2 NodeSet) NodeSet {
     return nil
 }
 
-func (nodes NodeSet) ContainsNode(node *Node) bool {
-    for _, localNode := range nodes {
+func (set NodeSet) ContainsNode(node *Node) (int, bool) {
+    for position, localNode := range set {
         if localNode == node {
-            return true
+            return position, true
         }
     }
-    return false
+    return -1, false
 }
 
-func (nodes NodeSet) ContainsSubset(otherSet NodeSet) bool {
+func (set NodeSet) ContainsSubset(otherSet NodeSet) bool {
     return false
 }
 
 // TODO use a concurrent version
-func (nodes NodeSet) FirstNodeNotIn(sets ...NodeSet) *Node {
+func (set NodeSet) FirstNodeNotIn(sets ...NodeSet) *Node {
     outerLoop:
-    for _, localNode := range nodes {
+    for _, localNode := range set {
         for _, set := range sets {
-            if set.ContainsNode(localNode) {
+            if _, ok := set.ContainsNode(localNode); ok {
                 continue outerLoop
             }
         }
@@ -66,9 +69,33 @@ func (nodes NodeSet) FirstNodeNotIn(sets ...NodeSet) *Node {
     return nil
 }
 
-func NewNodeSet(nodes ...*Node) NodeSet {
+func (set NodeSet) CommonAncestor() *Node {
+    if len(set) == 0 {
+        return nil
+    }
+    if len(set) == 1 {
+        return set[0]
+    }
+    currentNode := set[0]
+    pruningSubject := currentNode.UpwardParents()
+    nodesLeft := set[1:]
+    for _, currentNode := range nodesLeft {
+        if pruneAtPos, ok := pruningSubject.ContainsNode(currentNode); ok {
+            pruningSubject = append(pruningSubject[:pruneAtPos], pruningSubject[pruneAtPos+1:]...)
+        } else {
+            currentAncestors := currentNode.UpwardParents()
+            pruningSubject = pruningSubject.Intersect(currentAncestors)
+        }
+    }
+    if len(pruningSubject) > 0 {
+        return pruningSubject[0]
+    }
+    return nil
+}
+
+func NewNodeSet(set ...*Node) NodeSet {
     nodeset := NodeSet(nil)
-    for _, node := range nodes {
+    for _, node := range set {
         nodeset = append(nodeset, node)
     }
     return nodeset
